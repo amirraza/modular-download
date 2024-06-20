@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Modular Download"
 include(":app")
- 
+include(":download")
