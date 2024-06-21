@@ -8,28 +8,32 @@ class DownloadManager : ActionHandler {
 
     private var statusListener: StatusListener? = null
 
-    fun addStatusListener(listener: StatusListener) {
+    override fun addStatusListener(listener: StatusListener) {
         this.statusListener = listener
     }
 
     override fun start() {
-        this.statusListener?.onStatusChange(Status.OnStart)
+        this.statusListener?.onStatusChange(Status.OnStart("Downloading started..."))
 
-        Utils.timer(10_000) {
-            if (it == -1) {
-                this.statusListener?.onStatusChange(Status.OnCompleted)
-                return@timer
+        Utils.startTimerTask(10_000) {
+            if (it >= 100) {
+                this.statusListener?.onStatusChange(Status.OnCompleted("Downloading completed!"))
+                return@startTimerTask
             }
 
-            this.statusListener?.onStatusChange(Status.OnInProgress(it))
+            this.statusListener?.onStatusChange(Status.OnInProgress("Downloaded ", it))
         }
     }
 
     override fun cancel() {
-        this.statusListener?.onStatusChange(Status.OnError("Cancelled"))
+        Utils.stopTimerTask {
+            this.statusListener?.onStatusChange(Status.OnError("Download cancelled!"))
+        }
     }
 
     override fun stop() {
-        this.statusListener?.onStatusChange(Status.OnError("Stopped"))
+        Utils.stopTimerTask {
+            this.statusListener?.onStatusChange(Status.OnError("Download stopped!"))
+        }
     }
 }

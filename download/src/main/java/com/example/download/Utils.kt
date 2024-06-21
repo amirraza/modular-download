@@ -1,24 +1,39 @@
 package com.example.download
 
-import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
+import java.util.Timer
+import java.util.TimerTask
 
 internal object Utils {
 
-    fun timer(timeInMillis: Long, action: (Int) -> Unit) {
-        if (timeInMillis <= 0) {
-            action(0)
-            return
-        }
+    private val handler = Handler(Looper.getMainLooper())
+    private const val interval = 100L // 100 ms
+    private var elapsedTime = 0L
+    private var timer = Timer()
 
-        val timer = object : CountDownTimer(timeInMillis, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                action(millisUntilFinished.toInt())
-            }
+    fun stopTimerTask(callback: () -> Unit) {
+        elapsedTime = 0
+        timer.cancel()
+        callback()
+    }
 
-            override fun onFinish() {
-                action(-1)
+    fun startTimerTask(timeInMillis: Int, callback: (Int) -> Unit) {
+        timer = Timer()
+        val timerTask = object : TimerTask() {
+            override fun run() {
+                elapsedTime += interval
+
+                // Update status on the UI thread
+                handler.post {
+                    callback(elapsedTime.toInt() / 100)
+                }
+
+                if (elapsedTime >= timeInMillis) {
+                    timer.cancel()
+                }
             }
         }
-        timer.start()
+        timer.schedule(timerTask, 0, interval)
     }
 }
